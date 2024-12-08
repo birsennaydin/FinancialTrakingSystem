@@ -209,6 +209,83 @@ def add_inventory_item(item_name, quantity, cost, restock_date):
         print(f"Error adding inventory item: {e}")
         return "An error occurred while adding the inventory item."
 
+def delete_inventory_item(item_id):
+    """Delete an inventory item"""
+    try:
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM inventory WHERE id = ?', (item_id,))
+            conn.commit()
+            return "Inventory item deleted successfully."
+    except Exception as e:
+        print(f"Error deleting inventory item: {e}")
+        return "An error occurred while deleting the inventory item."
+
+def get_inventory_id_by_name(item_name):
+    """Fetch the inventory item ID based on the item name"""
+    try:
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT id FROM inventory WHERE item_name = ?', (item_name,))
+            item = cursor.fetchone()
+            return item[0] if item else None
+    except Exception as e:
+        print(f"Error fetching inventory item ID: {e}")
+        return None
+
+def get_inventory_items():
+    """Fetch all inventory items from the database"""
+    try:
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT id, item_name, quantity, cost, restock_date FROM inventory')
+            items = cursor.fetchall()
+            return [{"id": item[0], "item_name": item[1], "quantity": item[2], "cost": item[3], "restock_date": item[4]} for item in items]
+    except Exception as e:
+        print(f"Error fetching inventory items: {e}")
+        return []
+
+# business_logic.py
+
+def record_sale(inventory_id, quantity, amount, sale_date):
+    """Record a new sale transaction and update the inventory"""
+    try:
+        # Step 1: Check if the quantity is less than or equal to available stock
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT quantity FROM inventory WHERE id = ?', (inventory_id,))
+            item = cursor.fetchone()
+
+            if not item:
+                return "Item not found in inventory."
+
+            stock_quantity = item[0]
+
+            if quantity > stock_quantity:
+                return "Stock is not sufficient for this sale."  # Error message if stock is insufficient
+
+            # Step 2: Insert sale into the sales table
+            cursor.execute('''
+                INSERT INTO sales (inventory_id, quantity, amount, sale_date)
+                VALUES (?, ?, ?, ?)
+            ''', (inventory_id, quantity, amount, sale_date))
+            conn.commit()
+
+            # Step 3: Update inventory to reflect the sold quantity
+            new_stock_quantity = stock_quantity - quantity
+            cursor.execute('''
+                UPDATE inventory
+                SET quantity = ?
+                WHERE id = ?
+            ''', (new_stock_quantity, inventory_id))
+            conn.commit()
+
+            return "Sale recorded and inventory updated successfully."
+
+    except Exception as e:
+        print(f"Error recording sale or updating inventory: {e}")
+        return "An error occurred while recording the sale and updating the inventory."
+
 def update_inventory_item(item_id, item_name, quantity, cost, restock_date):
     """Update the details of an inventory item"""
     try:
@@ -225,26 +302,32 @@ def update_inventory_item(item_id, item_name, quantity, cost, restock_date):
         print(f"Error updating inventory item: {e}")
         return "An error occurred while updating the inventory item."
 
-def delete_inventory_item(item_id):
-    """Delete an inventory item"""
+def get_sales_history():
+    """Fetch all sales history"""
     try:
         with sqlite3.connect(config.DATABASE_NAME) as conn:
             cursor = conn.cursor()
-            cursor.execute('DELETE FROM inventory WHERE id = ?', (item_id,))
-            conn.commit()
-            return "Inventory item deleted successfully."
+            cursor.execute('''
+                SELECT inventory.item_name, sales.quantity, sales.amount, sales.sale_date
+                FROM sales
+                JOIN inventory ON sales.inventory_id = inventory.id
+            ''')
+            sales = cursor.fetchall()
+            return [{"item_name": sale[0], "quantity": sale[1], "amount": sale[2], "sale_date": sale[3]} for sale in sales]
     except Exception as e:
-        print(f"Error deleting inventory item: {e}")
-        return "An error occurred while deleting the inventory item."
-
-def get_inventory_items():
-    """Fetch all inventory items"""
-    try:
-        with sqlite3.connect(config.DATABASE_NAME) as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT id, item_name, quantity, cost, restock_date FROM inventory')
-            items = cursor.fetchall()
-            return [{"id": item[0], "item_name": item[1], "quantity": item[2], "cost": item[3], "restock_date": item[4]} for item in items]
-    except Exception as e:
-        print(f"Error fetching inventory items: {e}")
+        print(f"Error fetching sales history: {e}")
         return []
+
+def get_daily_revenue(date):
+    """Track revenue for a specific day"""
+    try:
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT SUM(amount) FROM sales WHERE sale_date = ?
+            ''', (date,))
+            revenue = cursor.fetchone()[0]
+            return revenue if revenue else 0.0
+    except Exception as e:
+        print(f"Error tracking daily revenue: {e}")
+        return 0.0
