@@ -191,3 +191,60 @@ def get_all_expenses():
     except Exception as e:
         print(f"Error fetching expenses: {e}")
         return []
+
+# business_logic.py
+
+def add_inventory_item(item_name, quantity, cost, restock_date):
+    """Add a new item to the inventory"""
+    try:
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO inventory (item_name, quantity, cost, restock_date)
+                VALUES (?, ?, ?, ?)
+            ''', (item_name, quantity, cost, restock_date))
+            conn.commit()
+            return "Inventory item added successfully."
+    except Exception as e:
+        print(f"Error adding inventory item: {e}")
+        return "An error occurred while adding the inventory item."
+
+def update_inventory_item(item_id, item_name, quantity, cost, restock_date):
+    """Update the details of an inventory item"""
+    try:
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                UPDATE inventory
+                SET item_name = ?, quantity = ?, cost = ?, restock_date = ?
+                WHERE id = ?
+            ''', (item_name, quantity, cost, restock_date, item_id))
+            conn.commit()
+            return "Inventory item updated successfully."
+    except Exception as e:
+        print(f"Error updating inventory item: {e}")
+        return "An error occurred while updating the inventory item."
+
+def delete_inventory_item(item_id):
+    """Delete an inventory item"""
+    try:
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM inventory WHERE id = ?', (item_id,))
+            conn.commit()
+            return "Inventory item deleted successfully."
+    except Exception as e:
+        print(f"Error deleting inventory item: {e}")
+        return "An error occurred while deleting the inventory item."
+
+def get_inventory_items():
+    """Fetch all inventory items"""
+    try:
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT id, item_name, quantity, cost, restock_date FROM inventory')
+            items = cursor.fetchall()
+            return [{"id": item[0], "item_name": item[1], "quantity": item[2], "cost": item[3], "restock_date": item[4]} for item in items]
+    except Exception as e:
+        print(f"Error fetching inventory items: {e}")
+        return []
