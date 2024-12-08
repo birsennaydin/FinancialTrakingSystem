@@ -11,13 +11,13 @@ def authenticate_user(username, password):
     try:
         with sqlite3.connect(config.DATABASE_NAME) as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT password, role FROM users WHERE username = ?', (username,))
+            cursor.execute('SELECT id, password, role FROM users WHERE username = ?', (username,))
             user = cursor.fetchone()
 
             if user:
                 hashed_password = hashlib.sha256(password.encode()).hexdigest()
-                if user[0] == hashed_password:
-                    return user[1]  # Return the role ('Admin' or 'User')
+                if user[1] == hashed_password:
+                    return user[2], user[0]  # Return the role ('Admin' or 'User'), user id
             return None
     except Exception as e:
         print(f"Error during authentication: {e}")
@@ -133,3 +133,61 @@ def delete_user(username):
     except Exception as e:
         print(f"Error deleting user: {e}")
         return "An error occurred while deleting the user."
+
+def get_categories():
+    """Fetch all categories from the database"""
+    try:
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT id, name FROM categories')
+            categories = cursor.fetchall()
+            return [{"id": category[0], "name": category[1]} for category in categories]
+    except Exception as e:
+        print(f"Error fetching categories: {e}")
+        return []
+
+def get_category_id_by_name(category_name):
+    """Get the category ID based on the category name"""
+    try:
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT id FROM categories WHERE name = ?', (category_name,))
+            category = cursor.fetchone()
+            if category:
+                return category[0]
+            else:
+                raise ValueError("Category not found.")
+    except Exception as e:
+        print(f"Error fetching category ID: {e}")
+        return None
+
+def record_expense(user_id, category_id, description, amount):
+    """Record a new expense into the database"""
+    try:
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO expenses (user_id, category_id, description, amount)
+                VALUES (?, ?, ?, ?)
+            ''', (user_id, category_id, description, amount))
+            conn.commit()
+            print("Expense recorded successfully.")
+    except Exception as e:
+        print(f"Error recording expense: {e}")
+
+def get_all_expenses():
+    """Fetch all expenses from the database with associated user information"""
+    try:
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT users.username, categories.name, expenses.description, expenses.amount
+                FROM expenses
+                JOIN categories ON expenses.category_id = categories.id
+                JOIN users ON expenses.user_id = users.id
+            ''')
+            expenses = cursor.fetchall()
+            return [{"username": expense[0], "category": expense[1], "description": expense[2], "amount": expense[3]} for expense in expenses]
+    except Exception as e:
+        print(f"Error fetching expenses: {e}")
+        return []

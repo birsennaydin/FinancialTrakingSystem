@@ -72,6 +72,9 @@ def create_tables(db_name=config.DATABASE_NAME):
             # Ensure that default admin user exists
             create_default_admin_user(conn)
 
+            # Insert default category 'Bill' if not already exists
+            insert_default_category(conn)
+
     except sqlite3.Error as e:
         print(f"An error occurred while creating tables: {e}")
 
@@ -123,3 +126,12 @@ def insert_user(db_name, name, username, password, email, role='User'):
         ''', (name, username, hashed_password, email, role))
         conn.commit()
         print(f"User {username} registered successfully.")
+
+def insert_default_category(conn):
+    """Insert default category 'Bill' into categories table if not exists."""
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM categories WHERE name = ?", ('Bill',))
+    if cursor.fetchone() is None:
+        cursor.execute("INSERT INTO categories (name) VALUES (?)", ('Bill',))
+        conn.commit()
+        print("Default category 'Bill' inserted.")
