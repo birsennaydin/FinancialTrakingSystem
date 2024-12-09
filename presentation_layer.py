@@ -147,13 +147,13 @@ class Application:
 
     def show_sales_tracking(self):
         """Display sales tracking options"""
-        sales_window = SalesTrackingWindow(self.root)
+        sales_window = SalesTrackingWindow(self.root, self.get_logged_in_user_id())
         sales_window.top.deiconify()
 
-    @staticmethod
-    def show_reporting():
-        """Dummy function for showing reporting"""
-        messagebox.showinfo("Reporting", "View reports here!")
+    def show_reporting(self):
+        """Reporting"""
+        report_window = ReportWindow(self.root)
+        report_window.top.deiconify()
 
     def update_user_info(self):
         username = self.username_entry.get()  # Fetch logged-in username
@@ -861,10 +861,12 @@ class ListInventoryWindow:
         self.top.quit()
 
 class SalesTrackingWindow:
-    def __init__(self, parent):
+    def __init__(self, parent, user_id):
         self.top = tk.Toplevel(parent)
         self.top.title("Sales Tracking")
         self.top.geometry("600x400")
+
+        self.logged_in_user_id = user_id
 
         # Buttons for sales tracking operations
         tk.Button(self.top, text="Record Sale", command=self.record_sale).pack()
@@ -873,7 +875,7 @@ class SalesTrackingWindow:
 
     def record_sale(self):
         """Open the Record Sale window"""
-        RecordSaleWindow(self.top)
+        RecordSaleWindow(self.top, self.logged_in_user_id)
 
     def view_sales_history(self):
         """Open the Sales History window"""
@@ -884,13 +886,14 @@ class SalesTrackingWindow:
         TrackDailyRevenueWindow(self.top)
 
 class RecordSaleWindow:
-    def __init__(self, parent):
+    def __init__(self, parent, user_id):
         self.top = tk.Toplevel(parent)
         self.top.title("Record Sale")
         self.top.geometry("700x500")
 
         # Fetch available items from inventory
         self.items = business_logic.get_inventory_items()
+        self.logged_in_user_id = user_id
 
         if not self.items:
             messagebox.showerror("Error", "No inventory items found.")
@@ -1065,7 +1068,7 @@ class RecordSaleWindow:
             total_amount = float(self.amount_entry.get())  # Get the total amount from the entry field
 
             # Call business logic to record the sale and update the inventory
-            sale_message = business_logic.record_sale(item_id, quantity, total_amount, sale_date)
+            sale_message = business_logic.record_sale(item_id, quantity, total_amount, sale_date, self.logged_in_user_id)
             messagebox.showinfo("Sale Record", sale_message)
 
             # Optionally close the window after a successful sale
@@ -1095,23 +1098,29 @@ class SalesHistoryWindow:
         self.table_frame = tk.Frame(self.top)
         self.table_frame.pack(pady=20)
 
+        # Create headers for the table
+        self.header_username = tk.Label(self.table_frame, text="Username", width=20, anchor="w")
+        self.header_username.grid(row=0, column=0, padx=10)
+
         self.header_item_name = tk.Label(self.table_frame, text="Item Name", width=20, anchor="w")
-        self.header_item_name.grid(row=0, column=0, padx=10)
+        self.header_item_name.grid(row=0, column=1, padx=10)
 
         self.header_quantity = tk.Label(self.table_frame, text="Quantity", width=15, anchor="w")
-        self.header_quantity.grid(row=0, column=1, padx=10)
+        self.header_quantity.grid(row=0, column=2, padx=10)
 
-        self.header_amount = tk.Label(self.table_frame, text="Amount", width=15, anchor="w")
-        self.header_amount.grid(row=0, column=2, padx=10)
+        self.header_amount = tk.Label(self.table_frame, text="Total Amount", width=15, anchor="w")
+        self.header_amount.grid(row=0, column=3, padx=10)
 
         self.header_sale_date = tk.Label(self.table_frame, text="Sale Date", width=20, anchor="w")
-        self.header_sale_date.grid(row=0, column=3, padx=10)
+        self.header_sale_date.grid(row=0, column=4, padx=10)
 
+        # Populate the table with sales data including username and item_name
         for i, sale in enumerate(self.sales, start=1):
-            tk.Label(self.table_frame, text=sale["item_name"], width=20, anchor="w").grid(row=i, column=0, padx=10)
-            tk.Label(self.table_frame, text=sale["quantity"], width=15, anchor="w").grid(row=i, column=1, padx=10)
-            tk.Label(self.table_frame, text=sale["amount"], width=15, anchor="w").grid(row=i, column=2, padx=10)
-            tk.Label(self.table_frame, text=sale["sale_date"], width=20, anchor="w").grid(row=i, column=3, padx=10)
+            tk.Label(self.table_frame, text=sale["username"], width=20, anchor="w").grid(row=i, column=0, padx=10)
+            tk.Label(self.table_frame, text=sale["item_name"], width=20, anchor="w").grid(row=i, column=1, padx=10)
+            tk.Label(self.table_frame, text=sale["quantity"], width=15, anchor="w").grid(row=i, column=2, padx=10)
+            tk.Label(self.table_frame, text=sale["amount"], width=15, anchor="w").grid(row=i, column=3, padx=10)
+            tk.Label(self.table_frame, text=sale["sale_date"], width=20, anchor="w").grid(row=i, column=4, padx=10)
 
         # Exit button to close the window
         exit_button = tk.Button(self.top, text="Exit", command=self.exit_application)
@@ -1120,7 +1129,6 @@ class SalesHistoryWindow:
     def exit_application(self):
         """Exit the application"""
         self.top.quit()
-
 
 class TrackDailyRevenueWindow:
     def __init__(self, parent):
@@ -1150,6 +1158,143 @@ class TrackDailyRevenueWindow:
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
         self.top.destroy()
+
+class ReportWindow:
+    def __init__(self, parent):
+        self.top = tk.Toplevel(parent)
+        self.top.title("Financial Reports")
+        self.top.geometry("600x400")
+
+        # Labels for the report options
+        self.report_label = tk.Label(self.top, text="Generate Financial Reports", font=("Arial", 16))
+        self.report_label.pack(pady=20)
+
+        # Button for expense report
+        self.expense_report_button = tk.Button(self.top, text="Generate Expense Report", command=self.generate_expense_report)
+        self.expense_report_button.pack(pady=10)
+
+        # Button for inventory report
+        self.inventory_report_button = tk.Button(self.top, text="Generate Inventory Report", command=self.generate_inventory_report)
+        self.inventory_report_button.pack(pady=10)
+
+        # Button for sales report
+        self.sales_report_button = tk.Button(self.top, text="Generate Sales Report", command=self.generate_sales_report)
+        self.sales_report_button.pack(pady=10)
+
+        # Exit button
+        self.exit_button = tk.Button(self.top, text="Exit", command=self.exit_application)
+        self.exit_button.pack(pady=20)
+
+    def generate_expense_report(self):
+        """Generate and display the expense report"""
+        try:
+            # Fetch expense data from the business logic layer
+            expenses = business_logic.get_all_expenses()
+
+            if not expenses:
+                messagebox.showinfo("Report", "No expenses found.")
+                return
+
+            # Create a new window to display the report
+            report_window = tk.Toplevel(self.top)
+            report_window.title("Expense Report")
+            report_window.geometry("800x600")
+
+            # Create a table to display expense data
+            table_frame = tk.Frame(report_window)
+            table_frame.pack(pady=20)
+
+            # Create headers for the expense table
+            tk.Label(table_frame, text="Username", width=20, anchor="w").grid(row=0, column=0, padx=10)
+            tk.Label(table_frame, text="Category", width=20, anchor="w").grid(row=0, column=1, padx=10)
+            tk.Label(table_frame, text="Description", width=30, anchor="w").grid(row=0, column=2, padx=10)
+            tk.Label(table_frame, text="Amount", width=15, anchor="w").grid(row=0, column=3, padx=10)
+
+            # Populate the table with expenses data
+            for i, expense in enumerate(expenses, start=1):
+                tk.Label(table_frame, text=expense["username"], width=20, anchor="w").grid(row=i, column=0, padx=10)
+                tk.Label(table_frame, text=expense["category"], width=20, anchor="w").grid(row=i, column=1, padx=10)
+                tk.Label(table_frame, text=expense["description"], width=30, anchor="w").grid(row=i, column=2, padx=10)
+                tk.Label(table_frame, text=expense["amount"], width=15, anchor="w").grid(row=i, column=3, padx=10)
+
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while generating the expense report: {e}")
+
+    def generate_inventory_report(self):
+        """Generate and display the inventory report"""
+        try:
+            # Fetch inventory data from the business logic layer
+            inventory = business_logic.get_inventory_items()
+
+            if not inventory:
+                messagebox.showinfo("Report", "No inventory found.")
+                return
+
+            # Create a new window to display the report
+            report_window = tk.Toplevel(self.top)
+            report_window.title("Inventory Report")
+            report_window.geometry("800x600")
+
+            # Create a table to display inventory data
+            table_frame = tk.Frame(report_window)
+            table_frame.pack(pady=20)
+
+            # Create headers for the inventory table
+            tk.Label(table_frame, text="Item Name", width=20, anchor="w").grid(row=0, column=0, padx=10)
+            tk.Label(table_frame, text="Quantity", width=15, anchor="w").grid(row=0, column=1, padx=10)
+            tk.Label(table_frame, text="Cost", width=15, anchor="w").grid(row=0, column=2, padx=10)
+            tk.Label(table_frame, text="Restock Date", width=20, anchor="w").grid(row=0, column=3, padx=10)
+
+            # Populate the table with inventory data
+            for i, item in enumerate(inventory, start=1):
+                tk.Label(table_frame, text=item["item_name"], width=20, anchor="w").grid(row=i, column=0, padx=10)
+                tk.Label(table_frame, text=item["quantity"], width=15, anchor="w").grid(row=i, column=1, padx=10)
+                tk.Label(table_frame, text=item["cost"], width=15, anchor="w").grid(row=i, column=2, padx=10)
+                tk.Label(table_frame, text=item["restock_date"], width=20, anchor="w").grid(row=i, column=3, padx=10)
+
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while generating the inventory report: {e}")
+
+    def generate_sales_report(self):
+        """Generate and display the sales report including the username"""
+        try:
+            # Fetch sales data with associated username from the business logic layer
+            sales = business_logic.get_sales_history_with_user()
+
+            if not sales:
+                messagebox.showinfo("Report", "No sales found.")
+                return
+
+            # Create a new window to display the report
+            report_window = tk.Toplevel(self.top)
+            report_window.title("Sales Report")
+            report_window.geometry("800x600")
+
+            # Create a table to display sales data
+            table_frame = tk.Frame(report_window)
+            table_frame.pack(pady=20)
+
+            # Create headers for the sales table
+            tk.Label(table_frame, text="Username", width=20, anchor="w").grid(row=0, column=0, padx=10)
+            tk.Label(table_frame, text="Item Name", width=20, anchor="w").grid(row=0, column=1, padx=10)
+            tk.Label(table_frame, text="Quantity", width=15, anchor="w").grid(row=0, column=2, padx=10)
+            tk.Label(table_frame, text="Amount", width=15, anchor="w").grid(row=0, column=3, padx=10)
+            tk.Label(table_frame, text="Sale Date", width=20, anchor="w").grid(row=0, column=4, padx=10)
+
+            # Populate the table with sales data
+            for i, sale in enumerate(sales, start=1):
+                tk.Label(table_frame, text=sale["username"], width=20, anchor="w").grid(row=i, column=0, padx=10)
+                tk.Label(table_frame, text=sale["item_name"], width=20, anchor="w").grid(row=i, column=1, padx=10)
+                tk.Label(table_frame, text=sale["quantity"], width=15, anchor="w").grid(row=i, column=2, padx=10)
+                tk.Label(table_frame, text=sale["amount"], width=15, anchor="w").grid(row=i, column=3, padx=10)
+                tk.Label(table_frame, text=sale["sale_date"], width=20, anchor="w").grid(row=i, column=4, padx=10)
+
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while generating the sales report: {e}")
+
+    def exit_application(self):
+        """Exit the report window"""
+        self.top.quit()
 
 def run_application():
     """Function to initialize and run the Tkinter application"""

@@ -58,10 +58,12 @@ def create_tables(db_name=config.DATABASE_NAME):
                    CREATE TABLE IF NOT EXISTS sales (
                        id INTEGER PRIMARY KEY AUTOINCREMENT,
                        inventory_id INTEGER NOT NULL,
+                       user_id INTEGER NOT NULL,
                        quantity INTEGER NOT NULL,
                        amount REAL NOT NULL,
                        sale_date TEXT NOT NULL,
-                       FOREIGN KEY (inventory_id) REFERENCES inventory(id)
+                       FOREIGN KEY (inventory_id) REFERENCES inventory(id),
+                       FOREIGN KEY (user_id) REFERENCES users(id)
                    )
                    ''')
 

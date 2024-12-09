@@ -247,44 +247,34 @@ def get_inventory_items():
 
 # business_logic.py
 
-def record_sale(inventory_id, quantity, amount, sale_date):
+def record_sale(inventory_id, quantity, amount, sale_date, user_id):
     """Record a new sale transaction and update the inventory"""
     try:
-        # Step 1: Check if the quantity is less than or equal to available stock
+        # Connect to the database
         with sqlite3.connect(config.DATABASE_NAME) as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT quantity FROM inventory WHERE id = ?', (inventory_id,))
-            item = cursor.fetchone()
 
-            if not item:
-                return "Item not found in inventory."
-
-            stock_quantity = item[0]
-
-            if quantity > stock_quantity:
-                return "Stock is not sufficient for this sale."  # Error message if stock is insufficient
-
-            # Step 2: Insert sale into the sales table
+            # Insert the sale record into the sales table with the user_id
             cursor.execute('''
-                INSERT INTO sales (inventory_id, quantity, amount, sale_date)
-                VALUES (?, ?, ?, ?)
-            ''', (inventory_id, quantity, amount, sale_date))
-            conn.commit()
+                INSERT INTO sales (inventory_id, quantity, amount, sale_date, user_id)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (inventory_id, quantity, amount, sale_date, user_id))
 
-            # Step 3: Update inventory to reflect the sold quantity
-            new_stock_quantity = stock_quantity - quantity
+            # Update the inventory table to reflect the reduced stock
             cursor.execute('''
                 UPDATE inventory
-                SET quantity = ?
+                SET quantity = quantity - ?
                 WHERE id = ?
-            ''', (new_stock_quantity, inventory_id))
+            ''', (quantity, inventory_id))
+
+            # Commit the changes
             conn.commit()
 
-            return "Sale recorded and inventory updated successfully."
+            return "Sale recorded successfully!"
 
-    except Exception as e:
-        print(f"Error recording sale or updating inventory: {e}")
-        return "An error occurred while recording the sale and updating the inventory."
+    except sqlite3.Error as e:
+        print(f"An error occurred while recording the sale: {e}")
+        return f"An error occurred: {e}"
 
 def update_inventory_item(item_id, item_name, quantity, cost, restock_date):
     """Update the details of an inventory item"""
@@ -303,19 +293,31 @@ def update_inventory_item(item_id, item_name, quantity, cost, restock_date):
         return "An error occurred while updating the inventory item."
 
 def get_sales_history():
-    """Fetch all sales history"""
+    """Retrieve sales history including username and item_name"""
     try:
-        with sqlite3.connect(config.DATABASE_NAME) as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT inventory.item_name, sales.quantity, sales.amount, sales.sale_date
-                FROM sales
-                JOIN inventory ON sales.inventory_id = inventory.id
-            ''')
-            sales = cursor.fetchall()
-            return [{"item_name": sale[0], "quantity": sale[1], "amount": sale[2], "sale_date": sale[3]} for sale in sales]
-    except Exception as e:
-        print(f"Error fetching sales history: {e}")
+        # Assuming a proper database connection and query
+        conn = sqlite3.connect(config.DATABASE_NAME)
+        cursor = conn.cursor()
+
+        # Update the query to join the 'sales', 'users', and 'inventory' tables to fetch usernames and item names
+        cursor.execute('''
+            SELECT sales.id, sales.inventory_id, sales.quantity, sales.amount, sales.sale_date, users.username, inventory.item_name
+            FROM sales
+            JOIN users ON sales.user_id = users.id
+            JOIN inventory ON sales.inventory_id = inventory.id
+            ORDER BY sales.sale_date DESC
+        ''')
+
+        sales = cursor.fetchall()
+
+        conn.close()
+
+        # Format and return the sales history with associated usernames and item names
+        return [{"id": sale[0], "inventory_id": sale[1], "quantity": sale[2], "amount": sale[3],
+                 "sale_date": sale[4], "username": sale[5], "item_name": sale[6]} for sale in sales]
+
+    except sqlite3.Error as e:
+        print(f"An error occurred while fetching sales history: {e}")
         return []
 
 def get_daily_revenue(date):
@@ -327,7 +329,25 @@ def get_daily_revenue(date):
                 SELECT SUM(amount) FROM sales WHERE sale_date = ?
             ''', (date,))
             revenue = cursor.fetchone()[0]
+            print('Revenue: ', revenue)
             return revenue if revenue else 0.0
     except Exception as e:
         print(f"Error tracking daily revenue: {e}")
         return 0.0
+
+def get_sales_history_with_user():
+    """Fetch sales history with associated usernames"""
+    try:
+        with sqlite3.connect(config.DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT users.username, inventory.item_name, sales.quantity, sales.amount, sales.sale_date
+                FROM sales
+                JOIN inventory ON sales.inventory_id = inventory.id
+                JOIN users ON sales.user_id = users.id
+            ''')
+            sales = cursor.fetchall()
+            return [{"username": sale[0], "item_name": sale[1], "quantity": sale[2], "amount": sale[3], "sale_date": sale[4]} for sale in sales]
+    except Exception as e:
+        print(f"Error fetching sales history with user: {e}")
+        return []
