@@ -40,9 +40,10 @@ class Application:
             return
 
         try:
-            user_role, user_id = business_logic.authenticate_user(username, password)
+            result = business_logic.authenticate_user(username, password)
 
-            if user_role:
+            if result:
+                user_role, user_id = result
                 self.logged_in_user_id = user_id
 
                 # Open the menu based on user role
@@ -212,15 +213,17 @@ class UpdateUserWindow:
         if self.role == 'Admin':
             selected_user = self.selected_user.get()
             user_info = business_logic.get_user_info(selected_user)
+            print(f"USERNAME 00: ", selected_user, user_info)
         else:
             # If the role is 'User', get the logged-in user's info
             user_info = business_logic.get_user_info(self.username)
+            print(f"USERNAME 01: ", self.username, user_info)
 
         if not user_info:
             messagebox.showerror("Error", "User not found.")
             return
-
-        name, username, email, role = user_info
+        print(f"USER Info: ", user_info)
+        name, username, email, role = user_info.values()
 
         # Populate fields with current user information
         self.name_label = tk.Label(self.top, text="Name:")

@@ -1,5 +1,4 @@
 import sqlite3
-import hashlib
 import config
 
 def create_tables(db_name=config.DATABASE_NAME):
@@ -71,69 +70,5 @@ def create_tables(db_name=config.DATABASE_NAME):
             conn.commit()
             print(f"Tables created successfully in {db_name}")
 
-            # Ensure that default admin user exists
-            create_default_admin_user(conn)
-
-            # Insert default category 'Bill' if not already exists
-            insert_default_category(conn)
-
     except sqlite3.Error as e:
         print(f"An error occurred while creating tables: {e}")
-
-
-def create_default_admin_user(conn):
-    """Check if admin user exists, if not, create it."""
-    cursor = conn.cursor()
-
-    # Check if the admin user already exists
-    cursor.execute("SELECT * FROM users WHERE username = ?",
-                   (config.DATABASE_ADMIN_USERNAME,))  # Parametreyi bir tuple olarak sağlıyoruz
-    if cursor.fetchone() is None:  # No admin user found, so create one
-        print("Admin user does not exist, creating default admin user.")
-
-        # Admin user details from config.py
-        name = config.DATABASE_ADMIN_NAME
-        username = config.DATABASE_ADMIN_USERNAME
-        password = config.DATABASE_ADMIN_PASSWORD  # This is the password that will be hash stored
-        email = config.DATABASE_ADMIN_EMAIL
-        role = config.DATABASE_ADMIN_ROLE
-
-        # Hash the password
-        hashed_password = hashlib.sha256(password.encode()).hexdigest()
-
-        # Insert the admin user into the database with the correct number of parameters
-        cursor.execute('''
-        INSERT INTO users (name, username, password, email, role)
-        VALUES (?, ?, ?, ?, ?)
-        ''', (name, username, hashed_password, email, role))
-        conn.commit()
-        print("Default admin user created.")
-
-def check_user_exists(db_name, username, email):
-    """Check if a user with the given username or email already exists."""
-    with sqlite3.connect(db_name) as conn:
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE username = ? OR email = ?', (username, email))
-        return cursor.fetchone() is not None
-
-
-def insert_user(db_name, name, username, password, email, role='User'):
-    """Insert a new user with hashed password into the users table."""
-    hashed_password = hashlib.sha256(password.encode()).hexdigest()
-    with sqlite3.connect(db_name) as conn:
-        cursor = conn.cursor()
-        cursor.execute('''
-        INSERT INTO users (name, username, password, email, role)
-        VALUES (?, ?, ?, ?, ?)
-        ''', (name, username, hashed_password, email, role))
-        conn.commit()
-        print(f"User {username} registered successfully.")
-
-def insert_default_category(conn):
-    """Insert default category 'Bill' into categories table if not exists."""
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM categories WHERE name = ?", ('Bill',))
-    if cursor.fetchone() is None:
-        cursor.execute("INSERT INTO categories (name) VALUES (?)", ('Bill',))
-        conn.commit()
-        print("Default category 'Bill' inserted.")
