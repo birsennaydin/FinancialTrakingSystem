@@ -1,4 +1,4 @@
-import business_logic
+from business.database_setup import insert_default_datas
 import models.models as models
 import presentation_layer
 
@@ -6,7 +6,7 @@ import presentation_layer
 models.create_tables()
 
 # Insert default datas into tables
-business_logic.insert_default_datas()
+insert_default_datas()
 
 # Run the application (GUI)
 presentation_layer.run_application()
