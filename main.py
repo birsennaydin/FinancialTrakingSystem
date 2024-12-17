@@ -1,5 +1,5 @@
 import business_logic
-import models
+import models.models as models
 import presentation_layer
 
 # Initialize database tables
