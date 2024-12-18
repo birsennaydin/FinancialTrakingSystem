@@ -2,11 +2,13 @@ import tkinter as tk
 from tkinter import messagebox
 
 from business.user_logic import authenticate_user
+from models.models_orm import Category
 from presentation.users import UserWindow, UpdateUserWindow, DeleteUserWindow, ListUsersWindow, RegisterWindow
 from presentation.expenses import ExpenseWindow
 from presentation.inventory import InventoryWindow
 from presentation.sales import SalesTrackingWindow
 from presentation.reporting import ReportWindow
+from presentation.category import CategoryWindow
 
 
 class Application:
@@ -80,6 +82,7 @@ class Application:
         admin_menu_window.geometry("600x400")
 
         tk.Button(admin_menu_window, text="User Management", command=self.show_user_management).pack()
+        tk.Button(admin_menu_window, text="Category Management", command=self.show_category_management).pack()
         tk.Button(admin_menu_window, text="Expense Management", command=self.show_expense_management).pack()
         tk.Button(admin_menu_window, text="Inventory Management", command=self.show_inventory_management).pack()
         tk.Button(admin_menu_window, text="Sales Tracking", command=self.show_sales_tracking).pack()
@@ -144,6 +147,10 @@ class Application:
 
     def show_expense_management(self):
         expense_window = ExpenseWindow(self.root, self.get_logged_in_user_id())
+        expense_window.top.deiconify()
+
+    def show_category_management(self):
+        expense_window = CategoryWindow(self.root)
         expense_window.top.deiconify()
 
     def show_inventory_management(self):
