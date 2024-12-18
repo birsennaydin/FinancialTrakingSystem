@@ -11,9 +11,9 @@ def mock_user_data():
     This can be used to create a user in the database.
     """
     return {
-        "name": "Test User",
-        "username": "testuser",
-        "email": "testuser@example.com",
+        "name": "Test User New",
+        "username": "testuser00",
+        "email": "testuser00@example.com",
         "password": "TestPassword123"
     }
 
