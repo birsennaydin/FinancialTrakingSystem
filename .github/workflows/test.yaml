@@ -3,10 +3,10 @@ name: Run Tests
 on:
   push:
     branches:
-      - master  # Run tests on pushes to the main branch
+      - master  # Run tests on pushes to the master branch
   pull_request:
     branches:
-      - master  # Run tests for pull requests targeting the main branch
+      - master  # Run tests for pull requests targeting the master branch
 
 jobs:
   test:
@@ -21,14 +21,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.x  # Replace with Python version
+          python-version: '3.x'  # Use the desired Python version (e.g., 3.9 or 3.8)
 
-      # Step 3: Install dependencies
+      # Step 3: Install dependencies from requirements.txt
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
+          pip install -r requirements.txt  # Install all dependencies including SQLAlchemy
 
       # Step 4: Run tests
       - name: Run tests
-        run: pytest
+        run: pytest --maxfail=1 --disable-warnings -q
