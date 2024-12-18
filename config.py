@@ -9,3 +9,5 @@ DATABASE_ADMIN_USERNAME = "admin"
 DATABASE_ADMIN_PASSWORD = "admin1234%"  # This is the password that will be hash stored
 DATABASE_ADMIN_EMAIL = "admin@gmail.com"
 DATABASE_ADMIN_ROLE = "Admin"
+
+TEST_DATABASE_NAME = "test_database.db"
