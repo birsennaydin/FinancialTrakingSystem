@@ -16,7 +16,6 @@ def authenticate_user(username, password):
 
         # Query the user by username
         user = session.query(User).filter_by(username=username).first()
-        print(f"User: {user.username}, Role: {user.role}")
         # If user exists
         if user:
             # Hash the input password to compare with the stored hashed password
@@ -24,7 +23,6 @@ def authenticate_user(username, password):
 
             # Check if the password matches
             if user.password == hashed_password:
-                print(f"User: {user.password}, Role: {hashed_password}")
                 return user.role, user.id  # Return the user's role and id
         return None  # Invalid password or user not found
     except Exception as e:
@@ -33,7 +31,7 @@ def authenticate_user(username, password):
     finally:
         session.close()
 
-def register_user(name, username, email, role="User"):
+def register_user(name, username, email, role="Employee"):
     """Register a new user after validating input."""
     session = Session()
     try:
@@ -65,7 +63,7 @@ def check_user_exists(session, username, email):
         print(f"Error checking user existence: {e}")
         return False
 
-def insert_user(session, name, username, password, email, role="User"):
+def insert_user(session, name, username, password, email, role="Employee"):
     """Insert a new user with hashed password into the users table."""
     try:
         # Hash the password
@@ -104,10 +102,8 @@ def update_user_info(username, name, email, password=None, role=None):
     """Update the user information in the database."""
     session = Session()
     try:
-        print(f"UpdateUsers: ", username, name, email, password, role)
         # Check if the email is already in use by another user
         existing_user = session.query(User).filter(User.email == email, User.username != username).first()
-        print(f"UpdateUsers22: ", existing_user)
         if existing_user:
             return "This email address is already in use by another user."
 

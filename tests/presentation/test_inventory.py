@@ -1,8 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 import tkinter as tk
-from presentation.inventory import InventoryWindow, AddInventoryWindow, UpdateInventoryWindow, DeleteInventoryWindow, ListInventoryWindow
-from business.inventory_logic import add_inventory_item, update_inventory_item, delete_inventory_item, get_inventory_items
+from presentation.inventory import InventoryWindow, AddInventoryWindow, UpdateInventoryWindow, ListInventoryWindow
 
 
 class TestInventoryWindow(unittest.TestCase):
@@ -10,22 +9,19 @@ class TestInventoryWindow(unittest.TestCase):
     @patch('presentation.inventory.messagebox.showerror')  # Mock messagebox.showerror
     @patch('presentation.inventory.AddInventoryWindow')  # Mock AddInventoryWindow
     @patch('presentation.inventory.UpdateInventoryWindow')  # Mock UpdateInventoryWindow
-    @patch('presentation.inventory.DeleteInventoryWindow')  # Mock DeleteInventoryWindow
     @patch('presentation.inventory.ListInventoryWindow')  # Mock ListInventoryWindow
-    def test_inventory_window_buttons(self, mock_list_inventory_window, mock_delete_inventory_window, mock_update_inventory_window, mock_add_inventory_window, mock_showerror):
+    def test_inventory_window_buttons(self, mock_list_inventory_window, mock_update_inventory_window, mock_add_inventory_window, mock_showerror):
         root = tk.Tk()
         app = InventoryWindow(root)
 
         # Simulate button clicks for inventory operations
         app.add_inventory()
         app.update_inventory()
-        app.delete_inventory()
         app.list_inventories()
 
         # Check if the appropriate windows were opened
         mock_add_inventory_window.assert_called_once()
         mock_update_inventory_window.assert_called_once()
-        mock_delete_inventory_window.assert_called_once()
         mock_list_inventory_window.assert_called_once()
 
 

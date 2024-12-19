@@ -14,7 +14,7 @@ class User(Base):
     username = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
     email = Column(String, nullable=False)
-    role = Column(String, default='User', nullable=False)
+    role = Column(String, default='Employee', nullable=False)
 
     expenses = relationship("Expense", back_populates="user")
     sales = relationship("Sale", back_populates="user")

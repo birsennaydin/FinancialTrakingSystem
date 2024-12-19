@@ -20,25 +20,6 @@ def add_inventory_item(item_name, quantity, cost, restock_date):
     finally:
         session.close()  # Close the session
 
-def delete_inventory_item(item_id):
-    """Delete an inventory item"""
-    session = Session()  # Start a new session
-    try:
-        # Query and delete the inventory item by its id
-        item = session.query(Inventory).filter_by(id=item_id).first()
-        if item:
-            session.delete(item)  # Delete the item
-            session.commit()  # Commit the changes
-            return "Inventory item deleted successfully."
-        else:
-            return "Inventory item not found."
-    except Exception as e:
-        print(f"Error deleting inventory item: {e}")
-        session.rollback()  # Rollback in case of error
-        return "An error occurred while deleting the inventory item."
-    finally:
-        session.close()  # Close the session
-
 def get_inventory_id_by_name(item_name):
     """Fetch the inventory item ID based on the item name"""
     session = Session()  # Start a new session

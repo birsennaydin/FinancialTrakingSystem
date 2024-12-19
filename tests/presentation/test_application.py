@@ -109,7 +109,7 @@ class TestApplication(unittest.TestCase):
         mock_show_user_menu.assert_not_called()
 
         # Simulate successful authentication with a User role
-        mock_authenticate_user.return_value = ('User', 2)  # 'User' role, user ID 2
+        mock_authenticate_user.return_value = ('Employee', 2)  # 'User' role, user ID 2
 
         # Call the submit_login method again
         app.submit_login()
@@ -117,27 +117,6 @@ class TestApplication(unittest.TestCase):
         # Assert that the User menu is shown (since the role is 'User')
         mock_show_user_menu.assert_called_once()
         mock_show_admin_menu.assert_called_once()  # Ensures Admin menu was already called before
-
-    @patch('presentation.application.messagebox.showerror')  # Mock messagebox.showerror
-    @patch('presentation.application.authenticate_user')  # Mock authenticate_user
-    @patch('presentation.application.Application.show_user_menu')  # Mock show_user_menu
-    def test_user_menu_visible(self, mock_show_user_menu, mock_authenticate_user, mock_showerror):
-        # Simulate successful authentication with a User role
-        mock_authenticate_user.return_value = ('User', 2)  # 'User' role
-
-        # Create the Tkinter root window and application instance
-        root = tk.Tk()
-        app = Application(root)
-
-        # Set valid username and password
-        app.username_entry.insert(0, "testuser")
-        app.password_entry.insert(0, "correctpassword")
-
-        # Call the submit_login method
-        app.submit_login()
-
-        # Assert that the User menu is shown
-        mock_show_user_menu.assert_called_once()
 
 
 if __name__ == '__main__':

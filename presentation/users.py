@@ -54,12 +54,10 @@ class UpdateUserWindow:
         else:
             # If the role is 'User', get the logged-in user's info
             user_info = get_user_info(self.username)
-            print(f"USERNAME 01: ", self.username, user_info)
 
         if not user_info:
             messagebox.showerror("Error", "User not found.")
             return
-        print(f"USER Info: ", user_info)
         name, username, email, role = user_info.values()
 
         # Populate fields with current user information
@@ -87,16 +85,17 @@ class UpdateUserWindow:
         self.password_entry = tk.Entry(self.top, show="*")  # This will display "******"
         self.password_entry.pack()
 
-        self.role_label = tk.Label(self.top, text="Role:")
-        self.role_label.pack()
-        self.role_var = tk.StringVar()
-        self.role_var.set(role)
-        # Role options based on the current user's role
-        if self.role == 'User':
-            self.role_option = tk.OptionMenu(self.top, self.role_var, "User")
+        if self.role == 'Admin':
+            self.role_label = tk.Label(self.top, text="Role:")
+            self.role_label.pack()
+            self.role_var = tk.StringVar()
+            self.role_var.set(role)
+            # Role options based on the current user's role
+            self.role_option = tk.OptionMenu(self.top, self.role_var, "Admin", "Employee")
+            self.role_option.pack()
         else:
-            self.role_option = tk.OptionMenu(self.top, self.role_var, "Admin", "User")
-        self.role_option.pack()
+            self.role_var = tk.StringVar()
+            self.role_var.set(role)
 
         self.submit_button = tk.Button(self.top, text="Submit", command=self.submit_update_user)
         self.submit_button.pack()
@@ -307,8 +306,8 @@ class UserWindow:
         self.role_label = tk.Label(self.top, text="Role:")
         self.role_label.pack()
         self.role_var = tk.StringVar()
-        self.role_var.set("User")  # Default value
-        self.role_option = tk.OptionMenu(self.top, self.role_var, "Admin", "User")
+        self.role_var.set("Employee")  # Default value
+        self.role_option = tk.OptionMenu(self.top, self.role_var, "Admin", "Employee")
         self.role_option.pack()
 
         self.submit_button = tk.Button(self.top, text="Submit", command=self.submit_add_user)

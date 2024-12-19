@@ -56,7 +56,7 @@ class Application:
                 # Open the menu based on user role
                 if user_role == 'Admin':
                     self.show_admin_menu()
-                elif user_role == 'User':
+                elif user_role == 'Employee':
                     self.show_user_menu()
 
                 self.root.withdraw()  # Hide the login window after successful login
@@ -97,6 +97,24 @@ class Application:
         self.root.quit()
 
     def show_user_menu(self):
+        """Display the admin menu with all options"""
+        employee_menu_window = tk.Toplevel(self.root)  # Open as a new window
+        employee_menu_window.title("Employee Menu")
+
+        # Set the window size for the Admin Menu
+        employee_menu_window.geometry("600x400")
+
+        tk.Button(employee_menu_window, text="User Management", command=self.show_user_update_menu).pack()
+        tk.Button(employee_menu_window, text="Category Management", command=self.show_category_management).pack()
+        tk.Button(employee_menu_window, text="Expense Management", command=self.show_expense_management).pack()
+        tk.Button(employee_menu_window, text="Inventory Management", command=self.show_inventory_management).pack()
+        tk.Button(employee_menu_window, text="Sales Tracking", command=self.show_sales_tracking).pack()
+
+        # Exit button to close the window
+        exit_button = tk.Button(employee_menu_window, text="Exit", command=self.exit_application)
+        exit_button.pack()
+
+    def show_user_update_menu(self):
         """Display the user menu with limited options"""
         user_menu_window = tk.Toplevel(self.root)  # Open as a new window
         user_menu_window.title("User Menu")

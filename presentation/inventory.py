@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 
-from business.inventory_logic import get_inventory_id_by_name, get_inventory_items, add_inventory_item, update_inventory_item, delete_inventory_item
+from business.inventory_logic import get_inventory_id_by_name, get_inventory_items, add_inventory_item, update_inventory_item
 
 class InventoryWindow:
     def __init__(self, parent):
@@ -12,7 +12,6 @@ class InventoryWindow:
         # Buttons for inventory operations
         tk.Button(self.top, text="Add Inventory", command=self.add_inventory).pack()
         tk.Button(self.top, text="Update Inventory", command=self.update_inventory).pack()
-        tk.Button(self.top, text="Delete Inventory", command=self.delete_inventory).pack()
         tk.Button(self.top, text="List Inventories", command=self.list_inventories).pack()
 
     def add_inventory(self):
@@ -22,10 +21,6 @@ class InventoryWindow:
     def update_inventory(self):
         """Open the Update Inventory window"""
         UpdateInventoryWindow(self.top)
-
-    def delete_inventory(self):
-        """Open the Delete Inventory window"""
-        DeleteInventoryWindow(self.top)
 
     def list_inventories(self):
         """Show the list of inventory items"""
@@ -90,7 +85,7 @@ class UpdateInventoryWindow:
 
         # Dropdown to select inventory item for update
         self.items = get_inventory_items()
-
+        print(f"Inventories Datas: {self.items}")
         if not self.items:
             messagebox.showerror("Error", "No inventory items found.")
             self.top.destroy()
@@ -101,7 +96,9 @@ class UpdateInventoryWindow:
 
         self.selected_item = tk.StringVar()
         self.selected_item.set(self.items[0]["item_name"])  # Default value
-        self.select_option = tk.OptionMenu(self.top, self.selected_item, *[item["item_name"] for item in self.items])
+        # OptionMenu for selecting inventory item
+        self.select_option = tk.OptionMenu(self.top, self.selected_item, *[item["item_name"] for item in self.items],
+                                           command=self.update_fields)
         self.select_option.pack()
 
         self.item_name_label = tk.Label(self.top, text="Item Name:")
@@ -127,6 +124,27 @@ class UpdateInventoryWindow:
         self.submit_button = tk.Button(self.top, text="Submit", command=self.submit_update_inventory)
         self.submit_button.pack()
 
+        # Initial population of fields
+        self.update_fields(self.selected_item.get())
+
+    def update_fields(self, selected_item_name):
+        """Update the input fields with the selected item's data."""
+        # Find the selected item in the inventory list
+        selected_item = next(item for item in self.items if item["item_name"] == selected_item_name)
+
+        # Populate the fields with the selected item’s data
+        self.item_name_entry.delete(0, tk.END)
+        self.item_name_entry.insert(0, selected_item["item_name"])
+
+        self.quantity_entry.delete(0, tk.END)
+        self.quantity_entry.insert(0, selected_item["quantity"])
+
+        self.cost_entry.delete(0, tk.END)
+        self.cost_entry.insert(0, selected_item["cost"])
+
+        self.restock_date_entry.delete(0, tk.END)
+        self.restock_date_entry.insert(0, selected_item["restock_date"])
+
     def submit_update_inventory(self):
         """Submit the updated inventory item"""
         item_name = self.item_name_entry.get()
@@ -147,46 +165,6 @@ class UpdateInventoryWindow:
             self.top.destroy()
         except ValueError:
             messagebox.showerror("Input Error", "Please enter valid numerical values for quantity and cost.")
-
-
-class DeleteInventoryWindow:
-    def __init__(self, parent):
-        self.top = tk.Toplevel(parent)
-        self.top.title("Delete Inventory Item")
-        self.top.geometry("600x400")
-
-        self.items = get_inventory_items()
-
-        if not self.items:
-            messagebox.showerror("Error", "No inventory items found.")
-            self.top.destroy()
-            return
-
-        self.select_label = tk.Label(self.top, text="Select Inventory Item to Delete:")
-        self.select_label.pack()
-
-        self.selected_item = tk.StringVar()
-        self.selected_item.set(self.items[0]["item_name"])  # Default value
-        self.select_option = tk.OptionMenu(self.top, self.selected_item, *[item["item_name"] for item in self.items])
-        self.select_option.pack()
-
-        self.submit_button = tk.Button(self.top, text="Submit", command=self.submit_delete_inventory)
-        self.submit_button.pack()
-
-    def submit_delete_inventory(self):
-        selected_item_name = self.selected_item.get()
-
-        if not selected_item_name:
-            messagebox.showerror("Input Error", "Please select an inventory item to delete.")
-            return
-
-        try:
-            item_id = next(item["id"] for item in self.items if item["item_name"] == selected_item_name)
-            message = delete_inventory_item(item_id)
-            messagebox.showinfo("Inventory Deleted", message)
-            self.top.destroy()
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred during deletion: {e}")
 
 
 class ListInventoryWindow:

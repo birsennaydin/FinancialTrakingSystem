@@ -16,7 +16,7 @@ def create_tables(db_name=config.DATABASE_NAME):
                        username TEXT UNIQUE NOT NULL,
                        password TEXT NOT NULL,
                        email TEXT NOT NULL,
-                       role TEXT CHECK(role IN ('Admin', 'User')) DEFAULT 'User' NOT NULL
+                       role TEXT CHECK(role IN ('Admin', 'Employee')) DEFAULT 'Employee' NOT NULL
                    )
                    ''')
 
