@@ -10,8 +10,8 @@ class CategoryWindow:
         self.top.geometry("600x400")
 
         # Buttons for inventory operations
-        tk.Button(self.top, text="Add Inventory", command=self.add_category).pack()
-        tk.Button(self.top, text="List Inventories", command=self.list_category).pack()
+        tk.Button(self.top, text="Add Category", command=self.add_category).pack()
+        tk.Button(self.top, text="List Categories", command=self.list_category).pack()
 
     def add_category(self):
         """Open the Add Inventory window"""

@@ -14,7 +14,7 @@ class ExpenseWindow:
         self.logged_in_user_id = user_id
 
         # Record Daily Expense
-        tk.Button(self.top, text="Record Daily Expense", command=self.record_expense).pack()
+        tk.Button(self.top, text="Record Expense", command=self.record_expense).pack()
 
         # List Expenses
         tk.Button(self.top, text="List Expenses", command=self.list_expenses).pack()
@@ -31,7 +31,7 @@ class ExpenseWindow:
 class RecordExpenseWindow:
     def __init__(self, parent, user_id):
         self.top = tk.Toplevel(parent)
-        self.top.title("Record Daily Expense")
+        self.top.title("Record Expense")
         self.top.geometry("600x400")
 
         self.user_id = user_id
